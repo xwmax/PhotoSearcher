@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    class ImagesParser extends AsyncTask<String, Bitmap, Void>{
+    class ImagesParser extends AsyncTask<String, ImagesParser.Result, Void>{
         @Override
         protected Void doInBackground(String... q) {
             try {
@@ -70,24 +70,23 @@ public class MainActivity extends AppCompatActivity {
                     builder.append(line);
                 }
                 String a = builder.toString();
-                Pattern baseImageParser = Pattern.compile("<img(.+?)>");
+                Pattern baseImageParser = Pattern.compile("<img(.+?)>.*?<a .*?href=\"(.+?)\"");
                 Matcher baseImageParserMatcher = baseImageParser.matcher(a);
                 Pattern getUrl = Pattern.compile("class=\"rg_i.+?\".+?data-iurl=\"(.+?)\"");
                 Pattern getUrl2 = Pattern.compile("data-src=\"(.+?)\".+?class=\"rg_i.+?\"");
                 while(baseImageParserMatcher.find()){
-                    String g = baseImageParserMatcher.group(1);
-                    Matcher getUrlMatcher = getUrl.matcher(g);
-                    Matcher getUrlMatcher2 = getUrl2.matcher(g);
+                    Matcher getUrlMatcher = getUrl.matcher(baseImageParserMatcher.group(1));
+                    Matcher getUrlMatcher2 = getUrl2.matcher(baseImageParserMatcher.group(1));
                     if(getUrlMatcher.find()) {
                         String u = getUrlMatcher.group(1);
                         URLConnection url = new URL(u).openConnection();
                         Bitmap bitmap = BitmapFactory.decodeStream(url.getInputStream());
-                        publishProgress(bitmap);
+                        publishProgress(new Result(Uri.parse(baseImageParserMatcher.group(2)), bitmap));
                     }else if(getUrlMatcher2.find()){
                         String u = getUrlMatcher2.group(1);
                         URLConnection url = new URL(u).openConnection();
                         Bitmap bitmap = BitmapFactory.decodeStream(url.getInputStream());
-                        publishProgress(bitmap);
+                        publishProgress(new Result(Uri.parse(baseImageParserMatcher.group(2)), bitmap));
                     }
                 }
             } catch (Exception e) {
@@ -108,10 +107,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(final Bitmap... values) {
+        protected void onProgressUpdate(final Result... values) {
             ImageView image = new ImageView(lin.getContext());
-            image.setImageBitmap(values[0]);
+            image.setImageBitmap(values[0].bitmap);
             lin.addView(image);
+            image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(values[0].path);
+                    startActivity(i);
+                }
+            });
+        }
+        private class Result{
+            public Uri path;
+            public Bitmap bitmap;
+            public  Result(Uri path, Bitmap bitmap){
+                this.path = path;
+                this.bitmap = bitmap;
+            }
         }
     }
 }
