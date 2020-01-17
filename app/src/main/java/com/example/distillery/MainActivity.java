@@ -78,13 +78,11 @@ public class MainActivity extends AppCompatActivity {
                     Matcher getUrlMatcher = getUrl.matcher(baseImageParserMatcher.group(1));
                     Matcher getUrlMatcher2 = getUrl2.matcher(baseImageParserMatcher.group(1));
                     if(getUrlMatcher.find()) {
-                        String u = getUrlMatcher.group(1);
-                        URLConnection url = new URL(u).openConnection();
+                        URLConnection url = new URL(getUrlMatcher.group(1)).openConnection();
                         Bitmap bitmap = BitmapFactory.decodeStream(url.getInputStream());
                         publishProgress(new Result(Uri.parse(baseImageParserMatcher.group(2)), bitmap));
                     }else if(getUrlMatcher2.find()){
-                        String u = getUrlMatcher2.group(1);
-                        URLConnection url = new URL(u).openConnection();
+                        URLConnection url = new URL(getUrlMatcher2.group(1)).openConnection();
                         Bitmap bitmap = BitmapFactory.decodeStream(url.getInputStream());
                         publishProgress(new Result(Uri.parse(baseImageParserMatcher.group(2)), bitmap));
                     }
